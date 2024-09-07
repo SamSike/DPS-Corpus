@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+!.gitignore
+
+# Unignore directories (to allow tracking .java files in subdirectories)
+!*/
+
+# Unignore .java files in subdirectories only
+!**/*.java
+
