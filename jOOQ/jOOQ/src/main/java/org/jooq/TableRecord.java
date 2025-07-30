@@ -1,0 +1,140 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Other licenses:
+ * -----------------------------------------------------------------------------
+ * Commercial licenses for this work are available. These replace the above
+ * Apache-2.0 license and offer limited warranties, support, maintenance, and
+ * commercial database integrations.
+ *
+ * For more information, please visit: https://www.jooq.org/legal/licensing
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+package org.jooq;
+
+import java.util.Collection;
+
+import org.jooq.conf.RecordDirtyTracking;
+import org.jooq.conf.Settings;
+import org.jooq.exception.DataAccessException;
+
+import org.jetbrains.annotations.Blocking;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * A record originating from a single table
+ *
+ * @param <R> The record type
+ * @author Lukas Eder
+ */
+public interface TableRecord<R extends TableRecord<R>> extends QualifiedRecord<R> {
+
+    /**
+     * The table from which this record was read.
+     */
+    @NotNull
+    Table<R> getTable();
+
+    @NotNull
+    @Override
+    R original();
+
+    /**
+     * Store this record to the database using an <code>INSERT</code> statement.
+     * <p>
+     * If you want to enforce re-insertion this record's values, regardless if
+     * the values in this record were {@link #modified()}, you can explicitly
+     * set the touched flags for all values with {@link #touched(boolean)} or
+     * for single values with {@link #touched(Field, boolean)}, prior to
+     * insertion, if {@link Settings#getRecordDirtyTracking()} is set to
+     * {@link RecordDirtyTracking#TOUCHED}
+     *
+     * @return <code>1</code> if the record was stored to the database. <code>0
+     *         </code> if storing was not necessary and
+     *         {@link Settings#isInsertUnchangedRecords()} is set to false.
+     * @throws DataAccessException if something went wrong executing the query
+     */
+    @Support
+    int insert() throws DataAccessException;
+
+    /**
+     * Store parts of this record to the database using an <code>INSERT</code>
+     * statement.
+     *
+     * @return <code>1</code> if the record was stored to the database. <code>0
+     *         </code> if storing was not necessary.
+     * @throws DataAccessException if something went wrong executing the query
+     * @see #insert()
+     */
+    @Support
+    int insert(Field<?>... fields) throws DataAccessException;
+
+    /**
+     * Store parts of this record to the database using an <code>INSERT</code>
+     * statement.
+     *
+     * @return <code>1</code> if the record was stored to the database. <code>0
+     *         </code> if storing was not necessary.
+     * @throws DataAccessException if something went wrong executing the query
+     * @see #insert()
+     */
+    @Support
+    int insert(Collection<? extends Field<?>> fields) throws DataAccessException;
+
+    /**
+     * Fetch a parent record of this record, given a foreign key.
+     * <p>
+     * This returns a parent record referenced by this record through a given
+     * foreign key, as if fetching from {@link #parent(ForeignKey)}. If no
+     * parent record was found, this returns <code>null</code>.
+     * <p>
+     * <strong>A separate roundtrip is created by this operation.</strong> It is
+     * often much better to include parent records using ordinary
+     * <code>JOIN</code> mechanisms in a single query, or using nested records,
+     * see <a href=
+     * "https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/nested-records/">https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/nested-records/</a>.
+     *
+     * @throws DataAccessException if something went wrong executing the query
+     * @see ForeignKey#fetchParent(Record)
+     * @see ForeignKey#fetchParents(java.util.Collection)
+     * @see ForeignKey#fetchParents(Record...)
+     */
+    @Nullable
+    @Support
+    @Blocking
+    <O extends UpdatableRecord<O>> O fetchParent(ForeignKey<R, O> key) throws DataAccessException;
+
+    /**
+     * Get a table expression representing the parent of this record, given a
+     * foreign key.
+     */
+    @NotNull
+    @Support
+    <O extends UpdatableRecord<O>> Table<O> parent(ForeignKey<R, O> key);
+}

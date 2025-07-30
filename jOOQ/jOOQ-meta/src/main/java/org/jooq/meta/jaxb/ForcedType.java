@@ -1,0 +1,1466 @@
+
+package org.jooq.meta.jaxb;
+
+import java.io.Serializable;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlSchemaType;
+import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import org.jooq.util.jaxb.tools.StringAdapter;
+import org.jooq.util.jaxb.tools.XMLAppendable;
+import org.jooq.util.jaxb.tools.XMLBuilder;
+
+
+/**
+ * A forced type declaration
+ * 
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "ForcedType", propOrder = {
+
+})
+@SuppressWarnings({
+    "all"
+})
+public class ForcedType implements Serializable, XMLAppendable
+{
+
+    private final static long serialVersionUID = 32001L;
+    @XmlElement(defaultValue = "0")
+    protected Integer priority = 0;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String name;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String userType;
+    @XmlSchemaType(name = "string")
+    protected VisibilityModifier visibilityModifier;
+    @XmlElement(defaultValue = "false")
+    protected Boolean hidden = false;
+    @XmlElement(defaultValue = "false")
+    protected Boolean redacted = false;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String generator;
+    protected Boolean auditInsertTimestamp;
+    protected Boolean auditInsertUser;
+    protected Boolean auditUpdateTimestamp;
+    protected Boolean auditUpdateUser;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String converter;
+    protected Boolean genericConverter;
+    protected Boolean autoConverter;
+    protected Boolean enumConverter;
+    protected Boolean xmlConverter;
+    protected Boolean jsonConverter;
+    protected LambdaConverter lambdaConverter;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String binding;
+    protected Boolean genericBinding;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String excludeExpression;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String includeExpression;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String expression;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String expressions;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String sql;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String excludeTypes;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String includeTypes;
+    @XmlJavaTypeAdapter(StringAdapter.class)
+    protected String types;
+    @XmlElement(defaultValue = "ALL")
+    @XmlSchemaType(name = "string")
+    protected Nullability nullability = Nullability.ALL;
+    @XmlElement(defaultValue = "ALL")
+    @XmlSchemaType(name = "string")
+    protected ForcedTypeObjectType objectType = ForcedTypeObjectType.ALL;
+    @XmlElement(defaultValue = "false")
+    protected Boolean ignoreUnused = false;
+
+    /**
+     * The priority among forced types in which to apply this one. Forced types of equal priority will be applied in the order in which they're added to the forced types list (e.g. the Maven lexical XML order)
+     * 
+     */
+    public Integer getPriority() {
+        return priority;
+    }
+
+    /**
+     * The priority among forced types in which to apply this one. Forced types of equal priority will be applied in the order in which they're added to the forced types list (e.g. the Maven lexical XML order)
+     * 
+     */
+    public void setPriority(Integer value) {
+        this.priority = value;
+    }
+
+    /**
+     * The name (in {@link org.jooq.impl.SQLDataType}) to force any matches to
+     * 
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * The name (in {@link org.jooq.impl.SQLDataType}) to force any matches to
+     * 
+     */
+    public void setName(String value) {
+        this.name = value;
+    }
+
+    /**
+     * The type of the user type - e.g. java.time.LocalDateTime.
+     * <p>
+     * If provided, {@link #getName()} will be ignored, and either {@link #getConverter()}
+     * or {@link #getBinding()} is required
+     * 
+     */
+    public String getUserType() {
+        return userType;
+    }
+
+    /**
+     * The type of the user type - e.g. java.time.LocalDateTime.
+     * <p>
+     * If provided, {@link #getName()} will be ignored, and either {@link #getConverter()}
+     * or {@link #getBinding()} is required
+     * 
+     */
+    public void setUserType(String value) {
+        this.userType = value;
+    }
+
+    /**
+     * The visibility modifier to be used in generated code for the column that is matched by this forced type, if applicable.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public VisibilityModifier getVisibilityModifier() {
+        return visibilityModifier;
+    }
+
+    /**
+     * The visibility modifier to be used in generated code for the column that is matched by this forced type, if applicable.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public void setVisibilityModifier(VisibilityModifier value) {
+        this.visibilityModifier = value;
+    }
+
+    /**
+     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isHidden() {
+        return hidden;
+    }
+
+    /**
+     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setHidden(Boolean value) {
+        this.hidden = value;
+    }
+
+    /**
+     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isRedacted() {
+        return redacted;
+    }
+
+    /**
+     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setRedacted(Boolean value) {
+        this.redacted = value;
+    }
+
+    /**
+     * A {@link org.jooq.Generator} implementation used for client-side computed columns.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public String getGenerator() {
+        return generator;
+    }
+
+    /**
+     * A {@link org.jooq.Generator} implementation used for client-side computed columns.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public void setGenerator(String value) {
+        this.generator = value;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isAuditInsertTimestamp() {
+        return auditInsertTimestamp;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setAuditInsertTimestamp(Boolean value) {
+        this.auditInsertTimestamp = value;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isAuditInsertUser() {
+        return auditInsertUser;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setAuditInsertUser(Boolean value) {
+        this.auditInsertUser = value;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isAuditUpdateTimestamp() {
+        return auditUpdateTimestamp;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setAuditUpdateTimestamp(Boolean value) {
+        this.auditUpdateTimestamp = value;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isAuditUpdateUser() {
+        return auditUpdateUser;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setAuditUpdateUser(Boolean value) {
+        this.auditUpdateUser = value;
+    }
+
+    /**
+     * A converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public String getConverter() {
+        return converter;
+    }
+
+    /**
+     * A converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public void setConverter(String value) {
+        this.converter = value;
+    }
+
+    /**
+     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isGenericConverter() {
+        return genericConverter;
+    }
+
+    /**
+     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setGenericConverter(Boolean value) {
+        this.genericConverter = value;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isAutoConverter() {
+        return autoConverter;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setAutoConverter(Boolean value) {
+        this.autoConverter = value;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isEnumConverter() {
+        return enumConverter;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setEnumConverter(Boolean value) {
+        this.enumConverter = value;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isXmlConverter() {
+        return xmlConverter;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setXmlConverter(Boolean value) {
+        this.xmlConverter = value;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isJsonConverter() {
+        return jsonConverter;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setJsonConverter(Boolean value) {
+        this.jsonConverter = value;
+    }
+
+    /**
+     * A lambda converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public LambdaConverter getLambdaConverter() {
+        return lambdaConverter;
+    }
+
+    /**
+     * A lambda converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public void setLambdaConverter(LambdaConverter value) {
+        this.lambdaConverter = value;
+    }
+
+    /**
+     * A {@link org.jooq.Binding} implementation for the custom type.
+     * 
+     */
+    public String getBinding() {
+        return binding;
+    }
+
+    /**
+     * A {@link org.jooq.Binding} implementation for the custom type.
+     * 
+     */
+    public void setBinding(String value) {
+        this.binding = value;
+    }
+
+    /**
+     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isGenericBinding() {
+        return genericBinding;
+    }
+
+    /**
+     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setGenericBinding(Boolean value) {
+        this.genericBinding = value;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public String getExcludeExpression() {
+        return excludeExpression;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public void setExcludeExpression(String value) {
+        this.excludeExpression = value;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. to be forced to have this type. If provided, both "includeExpression" and
+     * "includeTypes" must match.
+     * 
+     */
+    public String getIncludeExpression() {
+        return includeExpression;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. to be forced to have this type. If provided, both "includeExpression" and
+     * "includeTypes" must match.
+     * 
+     */
+    public void setIncludeExpression(String value) {
+        this.includeExpression = value;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public String getExpression() {
+        return expression;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public void setExpression(String value) {
+        this.expression = value;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public String getExpressions() {
+        return expressions;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public void setExpressions(String value) {
+        this.expressions = value;
+    }
+
+    /**
+     * A SQL statement that produces a table with one column containing the matched qualified or unqualified column names.
+     * 
+     */
+    public String getSql() {
+        return sql;
+    }
+
+    /**
+     * A SQL statement that produces a table with one column containing the matched qualified or unqualified column names.
+     * 
+     */
+    public void setSql(String value) {
+        this.sql = value;
+    }
+
+    /**
+     * A Java regular expression matching data types
+     * which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public String getExcludeTypes() {
+        return excludeTypes;
+    }
+
+    /**
+     * A Java regular expression matching data types
+     * which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public void setExcludeTypes(String value) {
+        this.excludeTypes = value;
+    }
+
+    /**
+     * A Java regular expression matching data types to be forced to have this
+     * type. If provided, both "includeExpression" and "includeTypes" must match.
+     * 
+     */
+    public String getIncludeTypes() {
+        return includeTypes;
+    }
+
+    /**
+     * A Java regular expression matching data types to be forced to have this
+     * type. If provided, both "includeExpression" and "includeTypes" must match.
+     * 
+     */
+    public void setIncludeTypes(String value) {
+        this.includeTypes = value;
+    }
+
+    /**
+     * The same as {@link #getIncludeTypes()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public String getTypes() {
+        return types;
+    }
+
+    /**
+     * The same as {@link #getIncludeTypes()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public void setTypes(String value) {
+        this.types = value;
+    }
+
+    /**
+     * Whether this forced type should apply to nullable / non-nullable / all columns
+     * 
+     */
+    public Nullability getNullability() {
+        return nullability;
+    }
+
+    /**
+     * Whether this forced type should apply to nullable / non-nullable / all columns
+     * 
+     */
+    public void setNullability(Nullability value) {
+        this.nullability = value;
+    }
+
+    /**
+     * Whether this forced type should apply to all object types, or only to specific ones
+     * 
+     */
+    public ForcedTypeObjectType getObjectType() {
+        return objectType;
+    }
+
+    /**
+     * Whether this forced type should apply to all object types, or only to specific ones
+     * 
+     */
+    public void setObjectType(ForcedTypeObjectType value) {
+        this.objectType = value;
+    }
+
+    /**
+     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isIgnoreUnused() {
+        return ignoreUnused;
+    }
+
+    /**
+     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setIgnoreUnused(Boolean value) {
+        this.ignoreUnused = value;
+    }
+
+    /**
+     * The priority among forced types in which to apply this one. Forced types of equal priority will be applied in the order in which they're added to the forced types list (e.g. the Maven lexical XML order)
+     * 
+     */
+    public ForcedType withPriority(Integer value) {
+        setPriority(value);
+        return this;
+    }
+
+    /**
+     * The name (in {@link org.jooq.impl.SQLDataType}) to force any matches to
+     * 
+     */
+    public ForcedType withName(String value) {
+        setName(value);
+        return this;
+    }
+
+    /**
+     * The type of the user type - e.g. java.time.LocalDateTime.
+     * <p>
+     * If provided, {@link #getName()} will be ignored, and either {@link #getConverter()}
+     * or {@link #getBinding()} is required
+     * 
+     */
+    public ForcedType withUserType(String value) {
+        setUserType(value);
+        return this;
+    }
+
+    /**
+     * The visibility modifier to be used in generated code for the column that is matched by this forced type, if applicable.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withVisibilityModifier(VisibilityModifier value) {
+        setVisibilityModifier(value);
+        return this;
+    }
+
+    /**
+     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withHidden(Boolean value) {
+        setHidden(value);
+        return this;
+    }
+
+    /**
+     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withRedacted(Boolean value) {
+        setRedacted(value);
+        return this;
+    }
+
+    /**
+     * A {@link org.jooq.Generator} implementation used for client-side computed columns.
+     * <p>
+     * This has no effect on matched objects that are not columns.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withGenerator(String value) {
+        setGenerator(value);
+        return this;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withAuditInsertTimestamp(Boolean value) {
+        setAuditInsertTimestamp(value);
+        return this;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withAuditInsertUser(Boolean value) {
+        setAuditInsertUser(value);
+        return this;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withAuditUpdateTimestamp(Boolean value) {
+        setAuditUpdateTimestamp(value);
+        return this;
+    }
+
+    /**
+     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
+     * <p>
+     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     */
+    public ForcedType withAuditUpdateUser(Boolean value) {
+        setAuditUpdateUser(value);
+        return this;
+    }
+
+    /**
+     * A converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public ForcedType withConverter(String value) {
+        setConverter(value);
+        return this;
+    }
+
+    /**
+     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     */
+    public ForcedType withGenericConverter(Boolean value) {
+        setGenericConverter(value);
+        return this;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
+     * 
+     */
+    public ForcedType withAutoConverter(Boolean value) {
+        setAutoConverter(value);
+        return this;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
+     * 
+     */
+    public ForcedType withEnumConverter(Boolean value) {
+        setEnumConverter(value);
+        return this;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
+     * 
+     */
+    public ForcedType withXmlConverter(Boolean value) {
+        setXmlConverter(value);
+        return this;
+    }
+
+    /**
+     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
+     * 
+     */
+    public ForcedType withJsonConverter(Boolean value) {
+        setJsonConverter(value);
+        return this;
+    }
+
+    /**
+     * A lambda converter implementation for the {@link #getUserType()}.
+     * 
+     */
+    public ForcedType withLambdaConverter(LambdaConverter value) {
+        setLambdaConverter(value);
+        return this;
+    }
+
+    /**
+     * A {@link org.jooq.Binding} implementation for the custom type.
+     * 
+     */
+    public ForcedType withBinding(String value) {
+        setBinding(value);
+        return this;
+    }
+
+    /**
+     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
+     * 
+     */
+    public ForcedType withGenericBinding(Boolean value) {
+        setGenericBinding(value);
+        return this;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public ForcedType withExcludeExpression(String value) {
+        setExcludeExpression(value);
+        return this;
+    }
+
+    /**
+     * A Java regular expression matching columns, parameters, attributes,
+     * etc. to be forced to have this type. If provided, both "includeExpression" and
+     * "includeTypes" must match.
+     * 
+     */
+    public ForcedType withIncludeExpression(String value) {
+        setIncludeExpression(value);
+        return this;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public ForcedType withExpression(String value) {
+        setExpression(value);
+        return this;
+    }
+
+    /**
+     * The same as {@link #getIncludeExpression()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public ForcedType withExpressions(String value) {
+        setExpressions(value);
+        return this;
+    }
+
+    /**
+     * A SQL statement that produces a table with one column containing the matched qualified or unqualified column names.
+     * 
+     */
+    public ForcedType withSql(String value) {
+        setSql(value);
+        return this;
+    }
+
+    /**
+     * A Java regular expression matching data types
+     * which must not have this type. Excludes match before includes, i.e.
+     * excludes have a higher priority.
+     * 
+     */
+    public ForcedType withExcludeTypes(String value) {
+        setExcludeTypes(value);
+        return this;
+    }
+
+    /**
+     * A Java regular expression matching data types to be forced to have this
+     * type. If provided, both "includeExpression" and "includeTypes" must match.
+     * 
+     */
+    public ForcedType withIncludeTypes(String value) {
+        setIncludeTypes(value);
+        return this;
+    }
+
+    /**
+     * The same as {@link #getIncludeTypes()}. This is kept for backwards compatibility reasons.
+     * 
+     */
+    public ForcedType withTypes(String value) {
+        setTypes(value);
+        return this;
+    }
+
+    /**
+     * Whether this forced type should apply to nullable / non-nullable / all columns
+     * 
+     */
+    public ForcedType withNullability(Nullability value) {
+        setNullability(value);
+        return this;
+    }
+
+    /**
+     * Whether this forced type should apply to all object types, or only to specific ones
+     * 
+     */
+    public ForcedType withObjectType(ForcedTypeObjectType value) {
+        setObjectType(value);
+        return this;
+    }
+
+    /**
+     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
+     * 
+     */
+    public ForcedType withIgnoreUnused(Boolean value) {
+        setIgnoreUnused(value);
+        return this;
+    }
+
+    @Override
+    public final void appendTo(XMLBuilder builder) {
+        builder.append("priority", priority);
+        builder.append("name", name);
+        builder.append("userType", userType);
+        builder.append("visibilityModifier", visibilityModifier);
+        builder.append("hidden", hidden);
+        builder.append("redacted", redacted);
+        builder.append("generator", generator);
+        builder.append("auditInsertTimestamp", auditInsertTimestamp);
+        builder.append("auditInsertUser", auditInsertUser);
+        builder.append("auditUpdateTimestamp", auditUpdateTimestamp);
+        builder.append("auditUpdateUser", auditUpdateUser);
+        builder.append("converter", converter);
+        builder.append("genericConverter", genericConverter);
+        builder.append("autoConverter", autoConverter);
+        builder.append("enumConverter", enumConverter);
+        builder.append("xmlConverter", xmlConverter);
+        builder.append("jsonConverter", jsonConverter);
+        builder.append("lambdaConverter", lambdaConverter);
+        builder.append("binding", binding);
+        builder.append("genericBinding", genericBinding);
+        builder.append("excludeExpression", excludeExpression);
+        builder.append("includeExpression", includeExpression);
+        builder.append("expression", expression);
+        builder.append("expressions", expressions);
+        builder.append("sql", sql);
+        builder.append("excludeTypes", excludeTypes);
+        builder.append("includeTypes", includeTypes);
+        builder.append("types", types);
+        builder.append("nullability", nullability);
+        builder.append("objectType", objectType);
+        builder.append("ignoreUnused", ignoreUnused);
+    }
+
+    @Override
+    public String toString() {
+        XMLBuilder builder = XMLBuilder.nonFormatting();
+        appendTo(builder);
+        return builder.toString();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        }
+        if (that == null) {
+            return false;
+        }
+        if (getClass()!= that.getClass()) {
+            return false;
+        }
+        ForcedType other = ((ForcedType) that);
+        if (priority == null) {
+            if (other.priority!= null) {
+                return false;
+            }
+        } else {
+            if (!priority.equals(other.priority)) {
+                return false;
+            }
+        }
+        if (name == null) {
+            if (other.name!= null) {
+                return false;
+            }
+        } else {
+            if (!name.equals(other.name)) {
+                return false;
+            }
+        }
+        if (userType == null) {
+            if (other.userType!= null) {
+                return false;
+            }
+        } else {
+            if (!userType.equals(other.userType)) {
+                return false;
+            }
+        }
+        if (visibilityModifier == null) {
+            if (other.visibilityModifier!= null) {
+                return false;
+            }
+        } else {
+            if (!visibilityModifier.equals(other.visibilityModifier)) {
+                return false;
+            }
+        }
+        if (hidden == null) {
+            if (other.hidden!= null) {
+                return false;
+            }
+        } else {
+            if (!hidden.equals(other.hidden)) {
+                return false;
+            }
+        }
+        if (redacted == null) {
+            if (other.redacted!= null) {
+                return false;
+            }
+        } else {
+            if (!redacted.equals(other.redacted)) {
+                return false;
+            }
+        }
+        if (generator == null) {
+            if (other.generator!= null) {
+                return false;
+            }
+        } else {
+            if (!generator.equals(other.generator)) {
+                return false;
+            }
+        }
+        if (auditInsertTimestamp == null) {
+            if (other.auditInsertTimestamp!= null) {
+                return false;
+            }
+        } else {
+            if (!auditInsertTimestamp.equals(other.auditInsertTimestamp)) {
+                return false;
+            }
+        }
+        if (auditInsertUser == null) {
+            if (other.auditInsertUser!= null) {
+                return false;
+            }
+        } else {
+            if (!auditInsertUser.equals(other.auditInsertUser)) {
+                return false;
+            }
+        }
+        if (auditUpdateTimestamp == null) {
+            if (other.auditUpdateTimestamp!= null) {
+                return false;
+            }
+        } else {
+            if (!auditUpdateTimestamp.equals(other.auditUpdateTimestamp)) {
+                return false;
+            }
+        }
+        if (auditUpdateUser == null) {
+            if (other.auditUpdateUser!= null) {
+                return false;
+            }
+        } else {
+            if (!auditUpdateUser.equals(other.auditUpdateUser)) {
+                return false;
+            }
+        }
+        if (converter == null) {
+            if (other.converter!= null) {
+                return false;
+            }
+        } else {
+            if (!converter.equals(other.converter)) {
+                return false;
+            }
+        }
+        if (genericConverter == null) {
+            if (other.genericConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!genericConverter.equals(other.genericConverter)) {
+                return false;
+            }
+        }
+        if (autoConverter == null) {
+            if (other.autoConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!autoConverter.equals(other.autoConverter)) {
+                return false;
+            }
+        }
+        if (enumConverter == null) {
+            if (other.enumConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!enumConverter.equals(other.enumConverter)) {
+                return false;
+            }
+        }
+        if (xmlConverter == null) {
+            if (other.xmlConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!xmlConverter.equals(other.xmlConverter)) {
+                return false;
+            }
+        }
+        if (jsonConverter == null) {
+            if (other.jsonConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!jsonConverter.equals(other.jsonConverter)) {
+                return false;
+            }
+        }
+        if (lambdaConverter == null) {
+            if (other.lambdaConverter!= null) {
+                return false;
+            }
+        } else {
+            if (!lambdaConverter.equals(other.lambdaConverter)) {
+                return false;
+            }
+        }
+        if (binding == null) {
+            if (other.binding!= null) {
+                return false;
+            }
+        } else {
+            if (!binding.equals(other.binding)) {
+                return false;
+            }
+        }
+        if (genericBinding == null) {
+            if (other.genericBinding!= null) {
+                return false;
+            }
+        } else {
+            if (!genericBinding.equals(other.genericBinding)) {
+                return false;
+            }
+        }
+        if (excludeExpression == null) {
+            if (other.excludeExpression!= null) {
+                return false;
+            }
+        } else {
+            if (!excludeExpression.equals(other.excludeExpression)) {
+                return false;
+            }
+        }
+        if (includeExpression == null) {
+            if (other.includeExpression!= null) {
+                return false;
+            }
+        } else {
+            if (!includeExpression.equals(other.includeExpression)) {
+                return false;
+            }
+        }
+        if (expression == null) {
+            if (other.expression!= null) {
+                return false;
+            }
+        } else {
+            if (!expression.equals(other.expression)) {
+                return false;
+            }
+        }
+        if (expressions == null) {
+            if (other.expressions!= null) {
+                return false;
+            }
+        } else {
+            if (!expressions.equals(other.expressions)) {
+                return false;
+            }
+        }
+        if (sql == null) {
+            if (other.sql!= null) {
+                return false;
+            }
+        } else {
+            if (!sql.equals(other.sql)) {
+                return false;
+            }
+        }
+        if (excludeTypes == null) {
+            if (other.excludeTypes!= null) {
+                return false;
+            }
+        } else {
+            if (!excludeTypes.equals(other.excludeTypes)) {
+                return false;
+            }
+        }
+        if (includeTypes == null) {
+            if (other.includeTypes!= null) {
+                return false;
+            }
+        } else {
+            if (!includeTypes.equals(other.includeTypes)) {
+                return false;
+            }
+        }
+        if (types == null) {
+            if (other.types!= null) {
+                return false;
+            }
+        } else {
+            if (!types.equals(other.types)) {
+                return false;
+            }
+        }
+        if (nullability == null) {
+            if (other.nullability!= null) {
+                return false;
+            }
+        } else {
+            if (!nullability.equals(other.nullability)) {
+                return false;
+            }
+        }
+        if (objectType == null) {
+            if (other.objectType!= null) {
+                return false;
+            }
+        } else {
+            if (!objectType.equals(other.objectType)) {
+                return false;
+            }
+        }
+        if (ignoreUnused == null) {
+            if (other.ignoreUnused!= null) {
+                return false;
+            }
+        } else {
+            if (!ignoreUnused.equals(other.ignoreUnused)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = ((prime*result)+((priority == null)? 0 :priority.hashCode()));
+        result = ((prime*result)+((name == null)? 0 :name.hashCode()));
+        result = ((prime*result)+((userType == null)? 0 :userType.hashCode()));
+        result = ((prime*result)+((visibilityModifier == null)? 0 :visibilityModifier.hashCode()));
+        result = ((prime*result)+((hidden == null)? 0 :hidden.hashCode()));
+        result = ((prime*result)+((redacted == null)? 0 :redacted.hashCode()));
+        result = ((prime*result)+((generator == null)? 0 :generator.hashCode()));
+        result = ((prime*result)+((auditInsertTimestamp == null)? 0 :auditInsertTimestamp.hashCode()));
+        result = ((prime*result)+((auditInsertUser == null)? 0 :auditInsertUser.hashCode()));
+        result = ((prime*result)+((auditUpdateTimestamp == null)? 0 :auditUpdateTimestamp.hashCode()));
+        result = ((prime*result)+((auditUpdateUser == null)? 0 :auditUpdateUser.hashCode()));
+        result = ((prime*result)+((converter == null)? 0 :converter.hashCode()));
+        result = ((prime*result)+((genericConverter == null)? 0 :genericConverter.hashCode()));
+        result = ((prime*result)+((autoConverter == null)? 0 :autoConverter.hashCode()));
+        result = ((prime*result)+((enumConverter == null)? 0 :enumConverter.hashCode()));
+        result = ((prime*result)+((xmlConverter == null)? 0 :xmlConverter.hashCode()));
+        result = ((prime*result)+((jsonConverter == null)? 0 :jsonConverter.hashCode()));
+        result = ((prime*result)+((lambdaConverter == null)? 0 :lambdaConverter.hashCode()));
+        result = ((prime*result)+((binding == null)? 0 :binding.hashCode()));
+        result = ((prime*result)+((genericBinding == null)? 0 :genericBinding.hashCode()));
+        result = ((prime*result)+((excludeExpression == null)? 0 :excludeExpression.hashCode()));
+        result = ((prime*result)+((includeExpression == null)? 0 :includeExpression.hashCode()));
+        result = ((prime*result)+((expression == null)? 0 :expression.hashCode()));
+        result = ((prime*result)+((expressions == null)? 0 :expressions.hashCode()));
+        result = ((prime*result)+((sql == null)? 0 :sql.hashCode()));
+        result = ((prime*result)+((excludeTypes == null)? 0 :excludeTypes.hashCode()));
+        result = ((prime*result)+((includeTypes == null)? 0 :includeTypes.hashCode()));
+        result = ((prime*result)+((types == null)? 0 :types.hashCode()));
+        result = ((prime*result)+((nullability == null)? 0 :nullability.hashCode()));
+        result = ((prime*result)+((objectType == null)? 0 :objectType.hashCode()));
+        result = ((prime*result)+((ignoreUnused == null)? 0 :ignoreUnused.hashCode()));
+        return result;
+    }
+
+}
