@@ -40,7 +40,7 @@ The code is collected from various open-source projects and educational resource
 | Spring Framework | https://github.com/spring-projects/spring-framework/tree/321a804449e78451f8ed22703ae93accb3a5139f |
 | Apache Hadoop    | https://github.com/apache/hadoop/tree/3d905f9cd07d118f5ea0c8485170f5ebefb84089                    |
 | Apache Camel     | https://github.com/apache/camel/tree/7c727b938a8c8f808b4915c784367b1751c1f84d                     |
-| Eclipse JDT      | https://github.com/eclipse-jdt/eclipse.jdt.core/tree/0eb7ed33a2e33e82a5670b0283fb1bb396d4029e     |
+| Eclipse JDT Core | https://github.com/eclipse-jdt/eclipse.jdt.core/tree/0eb7ed33a2e33e82a5670b0283fb1bb396d4029e     |
 | jOOQ             | https://github.com/jOOQ/jOOQ/tree/d5361b779238b4ee98b95f8591ff06f427feec6e                        |
 
 ## Contents
