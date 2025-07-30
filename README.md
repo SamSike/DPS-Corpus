@@ -16,26 +16,24 @@ The corpus is organized by author and design pattern. Each subdirectory contains
 8. Singleton
 9. Visitor
 
-The code is collected from various open-source projects and educational resources. They are linked below:
+The code is collected from various open-source projects and educational resources. They are linked below, with the specific commits considered:
 
 ## Academic Projects Used
 
-| Folder Name     | Open Source Repository Link                               |
-| --------------- | --------------------------------------------------------- |
-| AbdurRKhalid    | https://github.com/AbdurRKhalid/Design-Patterns           |
-| iluwatar        | https://github.com/iluwatar/java-design-patterns          |
-| JamesZBL        | https://github.com/JamesZBL/java_design_patterns          |
-| luisburgos      | https://github.com/luisburgos/design-patterns             |
-| premaseem       | https://github.com/premaseem/DesignPatternsJava9          |
-| quanke          | https://github.com/quanke/design-pattern-java-source-code |
-| RefactoringGuru | https://github.com/RefactoringGuru/design-patterns-java   |
-| saeidzebardast  | https://github.com/saeidzebardast/java-design-patterns    |
-| shihyu          | https://github.com/shihyu/DesignPatternExample            |
-| shusheng007     | https://github.com/shusheng007/design-patterns            |
+| Folder Name     | Open Source Repository Link                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| AbdurRKhalid    | https://github.com/AbdurRKhalid/Design-Patterns/tree/b14910f0e4beea5670a9a97b82462042a0ec6a32           |
+| iluwatar        | https://github.com/iluwatar/java-design-patterns/tree/ede37bd05568b1b8b814d8e9a1d2bbd71d9d615d          |
+| JamesZBL        | https://github.com/JamesZBL/java_design_patterns/tree/517a9b371396dc60d62f1afb1c25e51b0ef0ba20          |
+| luisburgos      | https://github.com/luisburgos/design-patterns/tree/759285c399d46c928e68434f1a8cd3b5ebcdbcdb             |
+| premaseem       | https://github.com/premaseem/DesignPatternsJava9/tree/da19de674ab5f7684e9a8780951a7f0aa5c92dce          |
+| quanke          | https://github.com/quanke/design-pattern-java-source-code/tree/4b43f4e2be1f14939ec8bf8491066b10b28fb7e4 |
+| RefactoringGuru | https://github.com/RefactoringGuru/design-patterns-java/tree/6ed6a34e22020d13c088d5aff10d1752700fca06   |
+| saeidzebardast  | https://github.com/saeidzebardast/java-design-patterns/tree/ad56e998fa047395f1fdf2b4ca0ff9d4f2ca0dc6    |
+| shihyu          | https://github.com/shihyu/DesignPatternExample/tree/345b04756e5b7bf5b260e8bbea6c514096eaae7e            |
+| shusheng007     | https://github.com/shusheng007/design-patterns/tree/7c3e09bf8f2efcd07f1912b3d38ba21d2d7bbb63            |
 
 ## Large Scale Open Source Projects Used
-
-(Links will include the specific commit used)
 
 | Project Name     | Open Source Repository                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------- |
