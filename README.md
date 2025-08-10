@@ -37,11 +37,11 @@ The code is collected from various open-source projects and educational resource
 
 | Project Name     | Open Source Repository                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------- |
-| Spring Framework | https://github.com/spring-projects/spring-framework/tree/321a804449e78451f8ed22703ae93accb3a5139f |
+| Spring Framework | https://github.com/spring-projects/spring-framework/tree/b808b53bcc4633f0622c7038df310b04e34bfe7b |
 | Apache Hadoop    | https://github.com/apache/hadoop/tree/3d905f9cd07d118f5ea0c8485170f5ebefb84089                    |
-| Apache Camel     | https://github.com/apache/camel/tree/7c727b938a8c8f808b4915c784367b1751c1f84d                     |
+| Apache Camel     | https://github.com/apache/camel/tree/5eab8f2c11473a48070da8ac066c8d7b8e641d85                     |
 | Eclipse JDT Core | https://github.com/eclipse-jdt/eclipse.jdt.core/tree/0eb7ed33a2e33e82a5670b0283fb1bb396d4029e     |
-| jOOQ             | https://github.com/jOOQ/jOOQ/tree/d5361b779238b4ee98b95f8591ff06f427feec6e                        |
+| jOOQ             | https://github.com/jOOQ/jOOQ/tree/5371c335dd16b1c096b2e3fd961a4d43c16ebb04                        |
 
 ## Contents
 
